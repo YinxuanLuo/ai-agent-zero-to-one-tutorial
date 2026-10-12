@@ -1,0 +1,5 @@
+* text=auto eol=lf
+
+# 生成的大 HTML 产物不计入仓库语言统计
+AIAgent从零到一-阅读版.html linguist-generated=true
+AIAgent从零到一-练习站.html linguist-generated=true

@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent 从零到一 · 练习站</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#1a1d23; --ink-2:#4a5160; --ink-3:#8a92a3;
+  --line:#e4e7ee; --brand:#2f6fed; --brand-soft:#eaf0fe;
+  --ok:#12a150; --ok-soft:#e8f7ee; --bad:#e5484d; --bad-soft:#fdecec;
+  --warn:#c98a00; --warn-soft:#fff5e0;
+  --code-bg:#f4f6fa; --radius:12px;
+  --mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+code,pre{font-family:var(--mono)}
+code{background:var(--code-bg);padding:2px 6px;border-radius:5px;font-size:.88em;color:#b0348c}
+pre{
+  background:var(--code-bg);border:1px solid var(--line);border-radius:10px;
+  padding:14px 16px;overflow:auto;font-size:13px;line-height:1.65;color:#2b3240;
+}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+
+/* ---------- 布局 ---------- */
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 80px}
+header.top{
+  background:linear-gradient(135deg,#2f6fed,#7a4ff0);color:#fff;
+  padding:38px 20px 30px;margin-bottom:26px;
+}
+header.top .inner{max-width:1080px;margin:0 auto}
+header.top h1{margin:0 0 8px;font-size:27px;letter-spacing:-.4px}
+header.top p{margin:0;opacity:.93;font-size:14.5px;max-width:760px}
+.badges{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+.badge{
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);
+  padding:5px 11px;border-radius:100px;font-size:12.5px;backdrop-filter:blur(4px);
+}
+
+/* ---------- 标签页 ---------- */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;border-bottom:2px solid var(--line);padding-bottom:0}
+.tab{
+  background:none;border:none;cursor:pointer;font:inherit;font-size:14.5px;font-weight:600;
+  color:var(--ink-3);padding:10px 16px;border-bottom:2.5px solid transparent;margin-bottom:-2px;
+  border-radius:8px 8px 0 0;transition:.15s;
+}
+.tab:hover{color:var(--ink-2);background:#eef1f7}
+.tab.on{color:var(--brand);border-bottom-color:var(--brand);background:var(--brand-soft)}
+.panel{display:none}
+.panel.on{display:block;animation:fade .22s ease}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ---------- 卡片 ---------- */
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px 24px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,30,60,.03);
+}
+.card h2{margin:0 0 4px;font-size:18px}
+.card h3{margin:22px 0 8px;font-size:15.5px;color:var(--ink-2)}
+.muted{color:var(--ink-3);font-size:13.5px}
+
+/* ---------- 进度 ---------- */
+.progress{height:7px;background:var(--line);border-radius:100px;overflow:hidden;margin:12px 0 6px}
+.progress > i{display:block;height:100%;background:linear-gradient(90deg,#2f6fed,#7a4ff0);width:0;transition:width .35s ease}
+.statrow{display:flex;gap:20px;flex-wrap:wrap;font-size:13.5px;color:var(--ink-2);margin-top:6px}
+.statrow b{color:var(--ink);font-size:15px}
+
+/* ---------- 题目 ---------- */
+.q{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 22px;margin-bottom:12px;transition:.18s;
+}
+.q.right{border-color:#9fdcb8;background:linear-gradient(180deg,#fbfefc,#fff)}
+.q.wrong{border-color:#f2b8b9;background:linear-gradient(180deg,#fffbfb,#fff)}
+.q-head{display:flex;gap:12px;align-items:flex-start}
+.q-no{
+  flex:0 0 30px;height:30px;border-radius:8px;background:var(--brand-soft);color:var(--brand);
+  font:600 13px/30px var(--mono);text-align:center;
+}
+.q-text{flex:1;padding-top:3px;font-size:15px}
+.q-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{
+  font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;border-radius:8px;
+  padding:8px 16px;border:1px solid var(--line);background:#fff;color:var(--ink-2);transition:.15s;
+}
+.btn:hover{background:#f4f6fa;border-color:#cfd6e4}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{background:#245ed6}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.opt{
+  display:flex;gap:10px;align-items:flex-start;cursor:pointer;
+  border:1.5px solid var(--line);border-radius:9px;padding:11px 14px;margin-top:9px;transition:.15s;
+}
+.opt:hover{border-color:#b9c7e6;background:#fafbff}
+.opt .mark{
+  flex:0 0 22px;height:22px;border-radius:50%;border:1.5px solid #c3cbdb;
+  font:600 12px/20px var(--mono);text-align:center;color:var(--ink-3);margin-top:1px;
+}
+.opt.sel{border-color:var(--brand);background:var(--brand-soft)}
+.opt.sel .mark{background:var(--brand);border-color:var(--brand);color:#fff}
+.opt.good{border-color:var(--ok);background:var(--ok-soft)}
+.opt.good .mark{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt.bad .mark{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.locked{cursor:default}
+.explain{
+  margin-top:14px;padding:13px 16px;border-radius:9px;background:#f7f9fc;
+  border-left:3px solid var(--brand);font-size:13.8px;color:var(--ink-2);
+}
+.explain.good{background:var(--ok-soft);border-left-color:var(--ok)}
+.explain.bad{background:var(--bad-soft);border-left-color:var(--bad)}
+.explain b{color:var(--ink)}
+.tag{
+  display:inline-block;background:var(--brand-soft);color:var(--brand);font-size:11.5px;
+  font-weight:600;padding:2px 9px;border-radius:100px;margin-left:6px;vertical-align:1px;
+}
+.verdict{font-weight:700;margin-right:6px}
+.verdict.ok{color:var(--ok)}
+.verdict.no{color:var(--bad)}
+
+/* ---------- 表格 ---------- */
+table{border-collapse:collapse;width:100%;font-size:13.8px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:#f4f6fa;font-weight:600;color:var(--ink-2)}
+tbody tr:nth-child(even){background:#fbfcfe}
+
+/* ---------- 搜索 ---------- */
+.searchbar{display:flex;gap:10px;margin-bottom:16px}
+.searchbar input{
+  flex:1;font:inherit;font-size:14.5px;padding:11px 15px;border:1.5px solid var(--line);
+  border-radius:10px;background:#fff;color:var(--ink);outline:none;transition:.15s;
+}
+.searchbar input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+
+/* ---------- 速查 ---------- */
+details.iv{
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  margin-bottom:9px;overflow:hidden;
+}
+details.iv[open]{border-color:#c9d8f7;box-shadow:0 2px 10px rgba(47,111,237,.07)}
+details.iv > summary{
+  cursor:pointer;padding:14px 18px;font-weight:600;font-size:14.5px;list-style:none;
+  display:flex;gap:11px;align-items:flex-start;transition:.15s;
+}
+details.iv > summary::-webkit-details-marker{display:none}
+details.iv > summary:hover{background:#f7f9fd}
+details.iv[open] > summary{background:var(--brand-soft);color:#1d4fb8}
+details.iv .body{padding:4px 18px 18px;font-size:14px;color:var(--ink-2);border-top:1px solid var(--line)}
+.numchip{
+  flex:0 0 26px;height:26px;border-radius:7px;background:#eef1f7;color:var(--ink-3);
+  font:600 12px/26px var(--mono);text-align:center;margin-top:1px;
+}
+details.iv[open] .numchip{background:var(--brand);color:#fff}
+
+.empty{text-align:center;color:var(--ink-3);padding:50px 20px;font-size:14.5px}
+.hint{
+  background:var(--warn-soft);border-left:3px solid var(--warn);padding:11px 15px;
+  border-radius:8px;font-size:13.5px;color:#7a5a00;margin:12px 0;
+}
+footer{text-align:center;color:var(--ink-3);font-size:13px;padding:34px 20px 0}
+@media (max-width:640px){
+  .wrap{padding:0 14px 60px}
+  header.top{padding:26px 14px 22px}
+  header.top h1{font-size:21px}
+  .card,.q{padding:16px 15px}
+  .tab{padding:9px 11px;font-size:13.5px}
+}
+@media print{
+  .tabs,.q-actions,.searchbar,header.top .badges{display:none}
+  .panel{display:block!important}
+  .card,.q{break-inside:avoid;box-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="inner">
+    <h1>AI Agent 从零到一 · 练习站</h1>
+    <p>配套《AI Agent 从零到一》教程的动手练习。所有题目、答案与解析均来自教程正文，答案已在 Node.js 22 上真实验证。进度自动保存在本机浏览器。</p>
+    <div class="badges">
+      <span class="badge">45 道自测题</span>
+      <span class="badge">50 道面试题</span>
+      <span class="badge">即时判分 + 解析</span>
+      <span class="badge">错题自动收集</span>
+      <span class="badge">离线可用</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab on" data-p="p-home">概览</button>
+    <button class="tab" data-p="p-s1">第一关 · 判断对错 <span class="tag" id="tag-s1"></span></button>
+    <button class="tab" data-p="p-s2">第二关 · 说出输出 <span class="tag" id="tag-s2"></span></button>
+    <button class="tab" data-p="p-wrong">错题本</button>
+    <button class="tab" data-p="p-iv">面试速查</button>
+  </div>
+
+  <!-- ========== 概览 ========== -->
+  <section class="panel on" id="p-home">
+    <div class="card">
+      <h2>你的进度</h2>
+      <div class="progress"><i id="bar"></i></div>
+      <div class="statrow">
+        <span>已答 <b id="st-done">0</b> / <span id="st-total">45</span></span>
+        <span>正确 <b id="st-ok">0</b></span>
+        <span>正确率 <b id="st-rate">—</b></span>
+        <span>错题 <b id="st-wrong">0</b></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>怎么用这个练习站</h2>
+      <p class="muted" style="margin-top:2px">配合教程的正确顺序：</p>
+      <table>
+        <thead><tr><th style="width:56px">顺序</th><th>做什么</th><th style="width:180px">对应教程</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>读速通版，把环境跑起来</td><td>速通版 / 第 01 章</td></tr>
+          <tr><td>2</td><td>读完整版 00–05 章，边读边做<b>第一关判断</b></td><td>docs/00–05</td></tr>
+          <tr><td>3</td><td>读 03/05 章工具调用与推理后，做<b>第二关说输出</b></td><td>docs/03~05</td></tr>
+          <tr><td>4</td><td>把<b>错题本</b>清空，回到对应章节重读</td><td>—</td></tr>
+          <tr><td>5</td><td>面试前刷<b>面试速查</b>，先自答再展开对答案</td><td>docs/11</td></tr>
+        </tbody>
+      </table>
+      <div class="hint"><b>关键动作：</b>第一关每题都要说出"为什么"，不要凭感觉猜。这 20 道判断题覆盖的是 Agent 最容易搞错的"无状态 / 工具调用 / 上下文窗口 / 安全护栏"，猜对了也等于没学会。</div>
+    </div>
+
+    <div class="card">
+      <h2>配套资源</h2>
+      <table>
+        <thead><tr><th>资源</th><th>位置</th></tr></thead>
+        <tbody>
+          <tr><td>📖 单文件 HTML 阅读版（12 章 + 速通版）</td><td><code>AIAgent从零到一-阅读版.html</code></td></tr>
+          <tr><td>🚀 速通版（约 2 小时）</td><td><code>速通版-2小时上手AIAgent.md</code></td></tr>
+          <tr><td>💻 全部可运行示例（已通过 tsc --noEmit）</td><td><code>examples/</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ========== 第一关 ========== -->
+  <section class="panel" id="p-s1">
+    <div class="card">
+      <h2>第一关 · 概念快问快答（20 题）</h2>
+      <p class="muted">判断下面每句话是<b>对</b>还是<b>错</b>。不要猜，想清楚理由。</p>
+      <div class="progress"><i id="bar-s1"></i></div>
+      <div class="statrow">
+        <span>已答 <b id="s1-done">0</b>/20</span>
+        <span>正确 <b id="s1-ok">0</b></span>
+      </div>
+      <div class="q-actions">
+        <button class="btn ghost" id="s1-reset">重置本关</button>
+      </div>
+    </div>
+    <div id="list-s1"></div>
+  </section>
+
+  <!-- ========== 第二关 ========== -->
+  <section class="panel" id="p-s2">
+    <div class="card">
+      <h2>第二关 · 说出输出（25 题）</h2>
+      <p class="muted">每题问的是：<b>这段代码执行后打印出什么？</b>先自己写下答案，再点"查看答案"对照。答案全部在 Node.js 22 上真实运行验证，不是凭记忆写的。</p>
+      <div class="progress"><i id="bar-s2"></i></div>
+      <div class="statrow">
+        <span>已看答案 <b id="s2-done">0</b>/25</span>
+      </div>
+      <div class="q-actions"><button class="btn ghost" id="s2-reset">重置本关</button></div>
+    </div>
+    <div id="list-s2"></div>
+  </section>
+
+  <!-- ========== 错题本 ========== -->
+  <section class="panel" id="p-wrong">
+    <div class="card">
+      <h2>错题本</h2>
+      <p class="muted">第一关答错的题会自动收集到这里。清空错题本的正确方式不是"背答案"，而是<b>回到对应章节重读</b>，再回来重做一遍。</p>
+      <div class="q-actions">
+        <button class="btn ghost" id="wrong-clear">清空错题本</button>
+        <button class="btn ghost" id="all-reset">重置全部进度</button>
+      </div>
+    </div>
+    <div id="list-wrong"></div>
+  </section>
+
+  <!-- ========== 面试速查 ========== -->
+  <section class="panel" id="p-iv">
+    <div class="card">
+      <h2>面试速查 · 高频问答</h2>
+      <p class="muted">来自 <code>docs/11-面试速查表.md</code>。用法：<b>先自己口头答一遍，再展开对答案。</b>直接看答案等于没看。</p>
+      <div class="searchbar">
+        <input id="iv-search" type="search" placeholder="搜索关键词，例如：工具调用、上下文窗口、ReAct、护栏…">
+      </div>
+      <div class="statrow"><span>共 <b id="iv-count">0</b> 题</span></div>
+    </div>
+    <div id="list-iv"></div>
+  </section>
+
+  <footer>
+    AI Agent 从零到一教程 · 练习站　|　题库与解析均取自教程正文，答案已在 Node.js 22 验证
+  </footer>
+</div>
+
+<script id="bank" type="application/json">{
+  "stage1": [
+    {
+      "id": "s1-1",
+      "no": 1,
+      "q": "大模型每次调用之间会自动记住上一轮的对话上下文。",
+      "answer": false,
+      "why": "模型每次调用都是独立计算，不保存跨调用的信息。所谓\"记忆\"是应用层每次把历史对话重新拼进输入。",
+      "from": "00 / 01 章"
+    },
+    {
+      "id": "s1-2",
+      "no": 2,
+      "q": "模型可以直接调用你代码里的 `get_weather` 函数，真正执行它。",
+      "answer": false,
+      "why": "模型运行在隔离环境里，碰不到你的函数。它只能\"表达想调用的意愿\"（输出一段文字），真正执行的是你的代码。",
+      "from": "00 / 03 章"
+    },
+    {
+      "id": "s1-3",
+      "no": 3,
+      "q": "工具执行的结果必须由你的代码以 `role: 'tool'` 的消息回填进 messages 数组。",
+      "answer": true,
+      "why": "工具结果必须由代码 `messages.push({ role: 'tool', content: result })` 回填，否则下一轮模型\"看不见\"结果。",
+      "from": "03 章"
+    },
+    {
+      "id": "s1-4",
+      "no": 4,
+      "q": "把 role 写成大写 `System`，程序会直接报错。",
+      "answer": false,
+      "why": "role 拼错**不报错、静默失效**——mock 不校验，模型认不出 `System`，你的规则被当普通对话忽略。",
+      "from": "02 章"
+    },
+    {
+      "id": "s1-5",
+      "no": 5,
+      "q": "上下文窗口是模型一次调用能\"看见\"的最大 token 数，是一个硬上限。",
+      "answer": true,
+      "why": "上下文窗口是模型一次调用能看见的最大 token 数，`system + 历史 + 工具结果` 全要挤进去。",
+      "from": "04 章"
+    },
+    {
+      "id": "s1-6",
+      "no": 6,
+      "q": "滑动窗口策略会丢失早期信息，摘要策略则会多花一次模型调用。",
+      "answer": true,
+      "why": "滑动窗口直接丢弃早期消息（快但丢信息）；摘要要多调一次模型来生成摘要（省但贵且有幻觉风险）。",
+      "from": "04 章"
+    },
+    {
+      "id": "s1-7",
+      "no": 7,
+      "q": "思维链（CoT）对翻译任务也很有用，应该尽量多写过程。",
+      "answer": false,
+      "why": "CoT 只对\"需要中间计算/推理\"的任务有效。翻译一步就能出答案，写过程纯属浪费 token。",
+      "from": "05 章"
+    },
+    {
+      "id": "s1-8",
+      "no": 8,
+      "q": "ReAct 里的 `Observation`（观察结果）是由模型自己生成的。",
+      "answer": false,
+      "why": "`Thought` 和 `Action` 是模型生成的文本，但 `Observation` 是**代码执行工具后喂回**的结果，模型自己不会、也不能生成它。",
+      "from": "05 章"
+    },
+    {
+      "id": "s1-9",
+      "no": 9,
+      "q": "function calling 是厂商把\"工具调用\"做成了结构化的 API 返回，你不再需要自己用正则去抠。",
+      "answer": true,
+      "why": "function calling 把工具调用做成结构化 API 返回（`tool_calls` 数组），你从\"正则抠文本\"升级成\"读字段\"。",
+      "from": "03 / 05 章"
+    },
+    {
+      "id": "s1-10",
+      "no": 10,
+      "q": "`JSON.parse` 成功，就说明你拿到了字段正确的数据。",
+      "answer": false,
+      "why": "`JSON.parse` 只保证\"这是合法 JSON\"，不保证\"字段名、类型、必填都对\"。解析后还要校验字段。",
+      "from": "06 章"
+    },
+    {
+      "id": "s1-11",
+      "no": 11,
+      "q": "模型输出的 JSON 被 Markdown 的 json 代码块包裹时，直接 `JSON.parse` 会失败。",
+      "answer": true,
+      "why": "模型以为你在聊天框看结果，常把 JSON 包进 Markdown 的 json 代码块，直接 parse 会报错，要先剥壳。",
+      "from": "06 章"
+    },
+    {
+      "id": "s1-12",
+      "no": 12,
+      "q": "模型漏转义了字符串里的双引号，可以用 `repairJson` 安全地自动修复。",
+      "answer": false,
+      "why": "漏转义的双引号让字符串结束位置产生二义性，**没有安全的修法**，只能源头堵（prompt 提醒 + JSON mode + JSON.stringify）。",
+      "from": "06 章"
+    },
+    {
+      "id": "s1-13",
+      "no": 13,
+      "q": "幻觉是模型的 bug，写好 prompt 就能彻底消除。",
+      "answer": false,
+      "why": "幻觉不是 bug，是模型的工作方式（逐字预测\"下一个最可能的词\"）。你只能假设它一定会编，用 RAG + 校验兜底。",
+      "from": "07 章"
+    },
+    {
+      "id": "s1-14",
+      "no": 14,
+      "q": "提示注入可以通过写更严格的 system prompt 来 100% 防住。",
+      "answer": false,
+      "why": "模型分不清\"指令\"和\"数据\"，用户输入里一句\"忽略以上规则\"就可能导致越权。只能分层降风险，不能 100% 防。",
+      "from": "07 章"
+    },
+    {
+      "id": "s1-15",
+      "no": 15,
+      "q": "给模型的工具权限越小，被提示注入后的损失就越小。",
+      "answer": true,
+      "why": "这是最小权限原则：给模型的工具清单就是你的攻击面，能力越小，被骗后的损失上限越低。",
+      "from": "07 章"
+    },
+    {
+      "id": "s1-16",
+      "no": 16,
+      "q": "模型生成的代码可以直接用 `eval` 执行，因为模型不会害你。",
+      "answer": false,
+      "why": "模型生成的内容可能被提示注入污染，`eval` 一次就可能泄露密钥。绝不直接 `eval` 模型生成的代码。",
+      "from": "07 章"
+    },
+    {
+      "id": "s1-17",
+      "no": 17,
+      "q": "Agent 循环只需要\"最大步数\"一道刹车就够了，预算不用单独管。",
+      "answer": false,
+      "why": "最大步数管\"次数\"，预算上限管\"钱\"，两者正交。一个只调 3 次但每次都调昂贵工具的任务照样烧钱。",
+      "from": "07 章"
+    },
+    {
+      "id": "s1-18",
+      "no": 18,
+      "q": "测试一个 Agent 时，应该断言模型的\"具体措辞\"。",
+      "answer": false,
+      "why": "模型是概率的，措辞每次都可能变，断言精确内容会让测试随机失败。应断言结构、边界，不测措辞。",
+      "from": "08 章"
+    },
+    {
+      "id": "s1-19",
+      "no": 19,
+      "q": "`node --experimental-strip-types demo.ts` 能替代 `tsc` 做类型检查。",
+      "answer": false,
+      "why": "`--experimental-strip-types` 只\"剥离类型注解\"，不做类型检查。真正的类型约束要靠 `tsc --noEmit`。",
+      "from": "08 章"
+    },
+    {
+      "id": "s1-20",
+      "no": 20,
+      "q": "Agent 的中间状态应该是一个可序列化的\"值\"，方便持久化和崩溃恢复。",
+      "answer": true,
+      "why": "状态是\"值\"才能序列化存库、崩溃后恢复、被测试断言；散落在局部变量里就都做不到了。",
+      "from": "08 章"
+    }
+  ],
+  "stage2": [
+    {
+      "id": "s2-1",
+      "no": 1,
+      "code": "console.log(JSON.stringify({ role: 'user', content: 'hi' }));",
+      "type": "`{\"role\":\"user\",\"content\":\"hi\"}`",
+      "note": "消息是纯对象，序列化后就是发给模型的格式"
+    },
+    {
+      "id": "s2-2",
+      "no": 2,
+      "code": "const messages = [];\nmessages.push({ role: 'user', content: '你好' });\nmessages.push({ role: 'assistant', content: 'Hello' });\nconsole.log(messages.length);",
+      "type": "`2`",
+      "note": "消息数组就是普通 JS 数组，`length` 直接可用"
+    },
+    {
+      "id": "s2-3",
+      "no": 3,
+      "code": "const r = { toolCall: { name: 'get_weather', args: { city: '北京' } } };\nconsole.log(r.toolCall ? '调工具' : '直接答');",
+      "type": "`调工具`",
+      "note": "模型返回 `{ toolCall }` 或 `{ text }`，判断它决定走哪条路"
+    },
+    {
+      "id": "s2-4",
+      "no": 4,
+      "code": "const msgs = [\n  { role: 'system', content: '规则' },\n  { role: 'user', content: '问题' },\n  { role: 'tool', content: '结果' },\n];\nconsole.log(msgs.map((m) => m.role).join('-'));",
+      "type": "`system-user-tool`",
+      "note": "四种 role 的语义顺序：规则 → 提问 → 工具结果"
+    },
+    {
+      "id": "s2-5",
+      "no": 5,
+      "code": "const tools = { get_weather: () => '晴' };\nconsole.log(tools['get_stock']);",
+      "type": "`undefined`",
+      "note": "取一个不存在的工具，得到 `undefined`，对它调用就会 `TypeError`"
+    },
+    {
+      "id": "s2-6",
+      "no": 6,
+      "code": "const args = '{\"expression\":\"1+2\"}';\nconsole.log(typeof args);",
+      "type": "`string`",
+      "note": "真实 API 里 `arguments` 是 JSON 字符串，要 `JSON.parse` 后才变对象"
+    },
+    {
+      "id": "s2-7",
+      "no": 7,
+      "code": "console.log(JSON.parse('{\"expression\":\"1+2\"}').expression);",
+      "type": "`1+2`",
+      "note": "`JSON.parse` 把字符串还原成对象，再取字段"
+    },
+    {
+      "id": "s2-8",
+      "no": 8,
+      "code": "const content = null;\nconsole.log(JSON.stringify({ role: 'tool', content }));",
+      "type": "`{\"role\":\"tool\",\"content\":null}`",
+      "note": "`JSON.stringify` 会把 `null` 原样保留，不会省略"
+    },
+    {
+      "id": "s2-9",
+      "no": 9,
+      "code": "const list = ['a', 'b', 'c', 'd', 'e'];\nconsole.log(list.slice(-2));",
+      "type": "`[ 'd', 'e' ]`",
+      "note": "`slice(-2)` 取最后两条，正是滑动窗口\"只留最近 N 条\"的做法"
+    },
+    {
+      "id": "s2-10",
+      "no": 10,
+      "code": "const text = '中文测试';\nconsole.log(text.length);",
+      "type": "`4`",
+      "note": "JS 字符串的 `length` 按 UTF-16 码元算，4 个中文 = 4（≠ token 数）"
+    },
+    {
+      "id": "s2-11",
+      "no": 11,
+      "code": "const cjk = ('今天天气不错').match(/[\\u4e00-\\u9fff]/g)?.length ?? 0;\nconsole.log(cjk);",
+      "type": "`6`",
+      "note": "中文 1 字 ≈ 1 token 的粗算：正则数出 6 个中文字"
+    },
+    {
+      "id": "s2-12",
+      "no": 12,
+      "code": "const raw = '",
+      "type": "`{\"a\":1}`",
+      "note": "剥掉 json 代码块外壳，正则 `[\\s\\S]*?` 非贪婪取到代码块内部"
+    },
+    {
+      "id": "s2-13",
+      "no": 13,
+      "code": "",
+      "type": "`{\"a\":1}`",
+      "note": "去尾逗号：把 `,}` 和 `,]` 里的逗号删掉"
+    },
+    {
+      "id": "s2-14",
+      "no": 14,
+      "code": "",
+      "type": "`0 12`",
+      "note": "找第一个 `{` 到最后一个 `}`，是\"无代码块时抠 JSON\"的思路"
+    },
+    {
+      "id": "s2-15",
+      "no": 15,
+      "code": "",
+      "type": "`number`",
+      "note": "`JSON.parse` 后 `22` 是真正的数字类型"
+    },
+    {
+      "id": "s2-16",
+      "no": 16,
+      "code": "",
+      "type": "`138****5678`",
+      "note": "手机号脱敏：前 3 位 + `****` + 后 4 位"
+    },
+    {
+      "id": "s2-17",
+      "no": 17,
+      "code": "",
+      "type": "`[ 2, 3 ]`",
+      "note": "`filter` 返回新数组，保留满足条件的元素"
+    },
+    {
+      "id": "s2-18",
+      "no": 18,
+      "code": "",
+      "type": "`function`",
+      "note": "`llm.invoke` 是一个方法（函数），这是可插拔 mock 的接口形状"
+    },
+    {
+      "id": "s2-19",
+      "no": 19,
+      "code": "",
+      "type": "`true`",
+      "note": "循环条件：步数还没到上限就继续"
+    },
+    {
+      "id": "s2-20",
+      "no": 20,
+      "code": "",
+      "type": "`超预算`",
+      "note": "花费超过预算就停，是\"预算刹车\"的判断逻辑"
+    },
+    {
+      "id": "s2-21",
+      "no": 21,
+      "code": "",
+      "type": "`TypeError`",
+      "note": "循环引用会让 `JSON.stringify` 抛 `TypeError`（Converting circular structure to JSON）"
+    },
+    {
+      "id": "s2-22",
+      "no": 22,
+      "code": "",
+      "type": "`{\"quote\":\"他说\\\"你好\\\"\"}`",
+      "note": "`JSON.stringify` 自动转义双引号，永远别手写 JSON 字符串"
+    },
+    {
+      "id": "s2-23",
+      "no": 23,
+      "code": "",
+      "type": "`weather`",
+      "note": "必填字段校验：`city` 在，`weather` 缺失被挑出来"
+    },
+    {
+      "id": "s2-24",
+      "no": 24,
+      "code": "",
+      "type": "`15`",
+      "note": "`reduce` 累加，是 token/成本累加这类计算的基础"
+    },
+    {
+      "id": "s2-25",
+      "no": 25,
+      "code": "",
+      "type": "`get_weather`",
+      "note": "正则从 ReAct 文本里抠出 Action 的工具名"
+    }
+  ],
+  "interview": [
+    {
+      "id": "iv-1-0",
+      "no": 1,
+      "q": "什么是 AI Agent？和普通 LLM 调用有什么区别？",
+      "a": "**答：** Agent 是\"让模型在循环里自主决定流程、调用工具直到完成任务\"的系统；普通 LLM 调用只是一次\"提问 → 回答\"。\n\n- 普通调用：一次 `invoke(messages)`，模型吐一段文字，结束。\n- Agent：把这次调用放进循环，模型每轮判断\"直接回答\"还是\"调工具\"，调工具就执行、回填、再来一轮。\n- 本质区别：**Agent 有\"循环 + 工具 + 记忆\"三个额外零件**，模型在循环里反复\"想一步、动一步\"。"
+    },
+    {
+      "id": "iv-2-1",
+      "no": 2,
+      "q": "为什么说 LLM 是\"无状态\"的？",
+      "a": "**答：** 模型每次调用都是独立计算，不保存任何跨调用的信息；\"记忆\"是应用层每次把历史拼回输入。\n\n- 调用一结束，模型就\"失忆\"，它记得的一切都是你重新喂给它的。\n- 所以 Agent 的记忆机制 = 每次调用前把 `messages` 数组完整传进去。\n- 工程含义：忘喂了，模型立刻失忆；喂多了，窗口就爆。"
+    },
+    {
+      "id": "iv-3-2",
+      "no": 3,
+      "q": "Agent 的四件套（大脑/记忆/工具/循环）分别是什么？代码里长什么样？",
+      "a": "**答：** 大脑 = 模型接口；记忆 = messages 数组；工具 = 函数表；循环 = for/while + if。\n\n- 大脑：`llm.invoke(messages)`，返回 `{ text }` 或 `{ toolCall }`。\n- 记忆：`const messages = [{ role, content }, ...]`，普通数组。\n- 工具：`const tools = { get_weather: (args) => '...' }`，键是工具名，值是函数。\n- 关键：**四件套里只有\"大脑\"是别人的，另外三个全是你的代码**——你的水平体现在这三样上。"
+    },
+    {
+      "id": "iv-4-3",
+      "no": 4,
+      "q": "Agent 和 Workflow（工作流）的本质区别？",
+      "a": "**答：** 流程是否由**模型自主决定**。工作流的流程是代码写死的，Agent 的下一步是模型现决定的。\n\n- 工作流：用户输入 → 固定调分类 → 固定调翻译 → 固定输出，走哪条路程序员写死。\n- Agent：模型自己判断\"该调哪个工具、调几次、下一步干什么\"。\n- 判据一句话：能画成确定性流程图的，就该用工作流。"
+    },
+    {
+      "id": "iv-5-4",
+      "no": 5,
+      "q": "什么时候该用 Agent，什么时候该用工作流？",
+      "a": "**答：** 能不用 Agent 就不用。能画成确定性流程的任务用工作流（或纯代码），只有\"模型必须自主决定流程\"时才上 Agent。\n\n- Agent 的\"自主\"要付代价：更贵、更慢、更容易跑偏、更难调试。\n- 务实顺序：先问能不能不用 Agent → 简单 Agent 自建 → 复杂状态机才上 LangGraph。"
+    },
+    {
+      "id": "iv-6-5",
+      "no": 6,
+      "q": "模型真的能\"调用函数\"吗？工具调用到底发生了什么？",
+      "a": "**答：** 不能。模型只输出一段\"我想调 X 工具、参数是 Y\"的结构化文字，由你的代码解析、执行、再喂回结果。\n\n- 四步：模型输出 tool_call → 代码解析 → 代码执行工具 → 结果以 `role: 'tool'` 喂回。\n- 模型只参与\"想要什么\"和\"看懂结果\"，真正动手的是你的代码。\n- 这是第 00 章\"模型负责想，代码负责动\"的落地。"
+    },
+    {
+      "id": "iv-7-6",
+      "no": 7,
+      "q": "为什么说 Agent 是\"不可靠的可靠系统\"？工程上要为此做什么？",
+      "a": "**答：** 因为模型是概率性的，同样的输入可能得到不同输出；所以 Agent 代码里必须到处是\"重试、校验、兜底\"。\n\n- `add(1,2)` 跑一百万次都是 3，Agent 总结一篇文章跑一百次有一百种总结。\n- 三件套：重试（出错再来）、校验（模型说\"完成了\"要验证）、兜底（跑偏/死循环强制停或降级人工）。"
+    },
+    {
+      "id": "iv-8-7",
+      "no": 8,
+      "q": "上下文窗口是什么？为什么它是 Agent 的第一物理约束？",
+      "a": "**答：** 上下文窗口是模型一次调用能\"看见\"的最大 token 数，是硬上限；Agent 每轮循环都在加消息，迟早撞墙。\n\n- 撞墙后果：API 拒绝（如 `context_length_exceeded`）或框架悄悄截断、模型\"悄悄失忆\"。\n- 所有\"记忆、压缩、检索\"技巧，本质都是在跟这个窗口抢空间。"
+    },
+    {
+      "id": "iv-1-8",
+      "no": 1,
+      "q": "四种消息 role 分别是什么？各自语义？",
+      "a": "**答：** `system`（规则）、`user`（提问）、`assistant`（模型回复）、`tool`（工具结果）。\n\n- `system` 放最前面，写身份 + 规则 + 约束，全程生效。\n- `tool` 是代码回填的、紧跟对应 `assistant` 之后，模型自己不能生成它。"
+    },
+    {
+      "id": "iv-2-9",
+      "no": 2,
+      "q": "tool 消息为什么必须由代码回填？位置有什么要求？",
+      "a": "**答：** 因为模型\"只说不动手\"，它没有执行环境；工具结果必须由代码执行后 push 成 `role: 'tool'`，且紧跟那条\"要调工具\"的 `assistant`。\n\n- 位置错了，模型会搞混\"这个结果回答的是哪个问题\"。\n- 忘了回填，模型下一轮\"看不见\"结果，会反复调同一个工具（死循环）。"
+    },
+    {
+      "id": "iv-3-10",
+      "no": 3,
+      "q": "system prompt 应该怎么写？",
+      "a": "**答：** 三段式——身份 + 规则 + 约束，写到\"让模型没有第二种解释\"。\n\n- 身份：你是谁（消除\"这次以什么身份干活\"的歧义）。\n- 规则：该怎么做（如\"问天气先调工具\"）。\n- 约束：输出成什么样（如\"50 字以内、只输出 JSON\"）。\n- 只写\"你是一个助手\"是不够的，模型不知道要干嘛。"
+    },
+    {
+      "id": "iv-4-11",
+      "no": 4,
+      "q": "提示词工程的核心原则有哪些？",
+      "a": "**答：** 三条——指令清晰、给示例（few-shot）、约束输出格式，共同动机是消除歧义、压住随机性。\n\n- 指令清晰：把\"要什么、不要什么\"写死。\n- few-shot：给 1~3 个输入输出示例，比抽象描述有效。\n- 约束格式：让输出能被代码消费（如 JSON）。"
+    },
+    {
+      "id": "iv-5-12",
+      "no": 5,
+      "q": "什么是 few-shot？为什么它比描述更有效？",
+      "a": "**答：** few-shot 是在 prompt 里给几个\"输入 → 输出\"的示例，让模型照着模仿；因为模型的训练方式就是\"看大量输入输出对\"学出来的。\n\n- 示例是 prompt 里信息密度最高的部分，一个例子胜过十句描述。\n- 代价：示例也占 token，只给 1~3 个最能代表目标的例子。"
+    },
+    {
+      "id": "iv-6-13",
+      "no": 6,
+      "q": "role 拼错（如大写 System）会发生什么？",
+      "a": "**答：** 不报错，静默失效——模型认不出 `System`，你的规则被当成普通对话忽略。\n\n- 比报错更坑，因为它没有报错提示，行为悄悄漂移。\n- 真实 API 层会返回 400 拒绝，但 mock 省掉了校验，这类错得自己盯。"
+    },
+    {
+      "id": "iv-7-14",
+      "no": 7,
+      "q": "上下文里信息的\"顺序\"有什么讲究？",
+      "a": "**答：** 模型是顺序读消息的：放前面 = 优先级高，越靠后的消息对模型\"此刻\"影响越大。\n\n- `system` 必须最前（最高优先级）。\n- 当前任务放最后（模型要回应它），历史放前面。"
+    },
+    {
+      "id": "iv-8-15",
+      "no": 8,
+      "q": "为什么提示词要\"惜字如金\"？",
+      "a": "**答：** 因为每个字都在消耗上下文窗口和 token（钱），多塞一条废话就多花一份钱、多占一份窗口。\n\n- 判断标准：每个字要么在消除歧义、要么在传递必要信息，否则就删。"
+    },
+    {
+      "id": "iv-1-16",
+      "no": 1,
+      "q": "工具调用的完整四步闭环是什么？",
+      "a": "**答：** ① 模型输出 tool_call → ② 代码解析工具名和参数 → ③ 代码执行工具 → ④ 结果以 `role: 'tool'` 喂回。\n\n- 模型只参与 ① 和 ④，执行（②③）完全在你的代码里。\n- 一次工具调用 = 多一次模型调用 = 多花钱。"
+    },
+    {
+      "id": "iv-2-17",
+      "no": 2,
+      "q": "什么是工具的 schema？description 和 parameters 各管什么？",
+      "a": "**答：** schema 是给模型的\"说明书\"，`description` 决定\"什么时候用我\"，`parameters`（JSON Schema）决定\"怎么用我\"。\n\n- 模型不认识你的工具，它唯一的认知来源就是你写的描述。\n- 写清单位、边界、给参数示例，是性价比最高的优化。\n- 工具描述的模糊度 = 模型的决策出错率。"
+    },
+    {
+      "id": "iv-3-18",
+      "no": 3,
+      "q": "为什么模型给的参数不可信？怎么校验？",
+      "a": "**答：** 模型输出是概率采样，参数可能是错类型、缺字段、越界；执行前必须分层校验。\n\n- 校验要分层、报错要具体（带错误名），这样模型才能看懂并修正。\n- 校验（validate）和执行（execute）要拆开，纯检查无副作用，测试时不用真执行。"
+    },
+    {
+      "id": "iv-4-19",
+      "no": 4,
+      "q": "工具执行出错该怎么办？为什么把错误喂回而不是 throw？",
+      "a": "**答：** 不 `throw`，把 `错误名: 错误信息` 塞进 `role: 'tool'` 喂回，让模型自我修正。\n\n- 错误对模型来说是\"信息\"不是\"灾难\"，它能读懂自然语言错误并重试/换工具/承认失败。\n- 但要配合兜底：最大循环次数 + 连续报错计数，防止死循环烧钱。"
+    },
+    {
+      "id": "iv-5-20",
+      "no": 5,
+      "q": "真实 OpenAI function calling 和简化 mock 的字段差异？",
+      "a": "**答：** 三处——`toolCall` 变 `tool_calls`（数组）、`args` 变 `function.arguments`（JSON 字符串）、`tool` 消息要带 `tool_call_id` 对应。\n\n- `tool_calls` 是数组，因为模型一次可能想调多个工具。\n- `arguments` 是字符串，要 `JSON.parse` 后才是对象。\n- `tool_call_id` 对不上，API 返回 400。"
+    },
+    {
+      "id": "iv-6-21",
+      "no": 6,
+      "q": "为什么 arguments 是字符串而不是对象？",
+      "a": "**答：** 因为模型每次只输出文本，所谓\"结构化参数\"其实是模型生成的一段 JSON 文本，OpenAI 只是原样塞进 `arguments` 字段。\n\n- 你的代码要 `JSON.parse` 转回对象，还要 try/catch 解析失败（模型可能生成非法 JSON）。"
+    },
+    {
+      "id": "iv-7-22",
+      "no": 7,
+      "q": "工具调用有什么成本？为什么一次工具调用 = 一次模型调用？",
+      "a": "**答：** 每次工具调用后，都要再把结果喂回模型、让模型\"看结果并决定下一步\"，这就是一次新的模型调用。\n\n- 循环 5 轮 = 5 次模型调用，成本按轮数累加。\n- 这是\"能不用 Agent 就别用\"的底层原因之一。"
+    },
+    {
+      "id": "iv-8-23",
+      "no": 8,
+      "q": "怎么防止模型调用不存在的工具？",
+      "a": "**答：** 执行前查白名单：`const fn = tools[name]`，`undefined` 就返回\"未知工具\"信息喂回，而不是直接调用崩掉。\n\n- 直接 `tools[name](args)` 会报 `TypeError: tools[name] is not a function`。\n- 模型会幻觉出工具名，所以白名单校验是必须的。"
+    },
+    {
+      "id": "iv-9-24",
+      "no": 9,
+      "q": "一次能调多个工具吗？怎么处理？",
+      "a": "**答：** 能，真实 API 的 `tool_calls` 是数组，模型一次可能想调多个工具。\n\n- 处理时要按顺序逐个执行，并把每个结果都用对应 `tool_call_id` 喂回。\n- mock 简化成了单个 `toolCall`，但接真实 API 时要意识到它是数组。"
+    },
+    {
+      "id": "iv-1-25",
+      "no": 1,
+      "q": "token 是什么？中英文 token 数差异？",
+      "a": "**答：** token 是模型切分文本的最小单位；中文约 1 字 ≈ 1 token，英文约 4 字符 ≈ 1 token。\n\n- 差异来自词表：英文常见词整个编码成 1 token，中文按字切得更多。\n- 所以同样字数，中英文 token 数能差 4 倍。"
+    },
+    {
+      "id": "iv-2-26",
+      "no": 2,
+      "q": "上下文窗口为什么会爆？",
+      "a": "**答：** 因为 Agent 是循环，每轮都在往 `messages` 里加消息（assistant 的 tool_call + tool 的结果），历史越滚越大，直到撞上窗口硬上限。\n\n- 巨型工具结果（几千行文件）会瞬间吃掉窗口。\n- 后果：API 拒绝，或框架悄悄截断最老消息、模型失忆。"
+    },
+    {
+      "id": "iv-3-27",
+      "no": 3,
+      "q": "记忆分哪三个层次？",
+      "a": "**答：** 短期（messages 数组）、长期（外部存储）、工作（任务关键信息），本质是给信息标注\"住哪、活多久\"。\n\n- 短期受窗口限制、随用随丢；长期存数据库/向量库、跨会话；工作是最不能丢的几条关键信息。"
+    },
+    {
+      "id": "iv-4-28",
+      "no": 4,
+      "q": "省上下文空间的三种策略？各自代价？",
+      "a": "**答：** 滑动窗口（砍）、摘要（压缩）、检索（外移）。\n\n- 滑动窗口：快、token 稳定，但丢早期信息。\n- 摘要：既省又保关键信息，但多一次模型调用 + 有幻觉/丢细节风险。\n- 检索：最稳但要建存储。实战常是组合拳。"
+    },
+    {
+      "id": "iv-5-29",
+      "no": 5,
+      "q": "滑动窗口和摘要各适合什么场景？",
+      "a": "**答：** 滑动窗口适合\"早期信息不重要、只看最近\"的场景（闲聊、实时问答）；摘要适合\"早期信息重要、但可用概率方式概括\"的场景（长任务、多轮客服）。\n\n- 判据：信息越不重要越可以砍；越重要越不能靠猜，要么摘要要么外移。"
+    },
+    {
+      "id": "iv-6-30",
+      "no": 6,
+      "q": "怎么估算一次调用的成本？",
+      "a": "**答：** 成本 = token × 单价，输入输出分开计费（输出通常贵 3~5 倍）。\n\n- 公式：`输入token/1e6 × 输入单价 + 输出token/1e6 × 输出单价`。\n- Agent 是循环，成本按\"轮数 × 每轮 token\"累加，压缩上下文 = 直接省钱。"
+    },
+    {
+      "id": "iv-7-31",
+      "no": 7,
+      "q": "为什么工具结果也要计入 token？",
+      "a": "**答：** 因为工具结果会作为 `role: 'tool'` 消息塞进 messages，下一轮要整个发给模型，它和对话一样占窗口。\n\n- 一个 8000 字符的工具返回可能瞬间吃掉整个窗口。\n- 处理：先判断是否真需要全文，不需要就截断/取关键部分/摘要后再喂回。"
+    },
+    {
+      "id": "iv-8-32",
+      "no": 8,
+      "q": "长期记忆怎么实现？检索（RAG）是什么？",
+      "a": "**答：** 长期记忆存外部（数据库/向量库），需要时检索回来拼进窗口；RAG 就是\"先检索相关资料、再让模型基于资料回答\"。\n\n- 它把\"回答所需的事实\"从模型脑子里搬出来放到输入里，模型从\"命题作文\"变成\"阅读理解\"。\n- 是抗幻觉最有效、最常用的手段。"
+    },
+    {
+      "id": "iv-1-33",
+      "no": 1,
+      "q": "为什么复杂任务模型\"一步出不了答案\"？",
+      "a": "**答：** 模型一次调用只有一次输出，复杂任务的每一步中间结果必须作为下一步的输入，单次调用给不了这些中间结果。\n\n- 多步任务靠代码把中间结果反复喂回输入（如 ReAct 循环）。"
+    },
+    {
+      "id": "iv-2-34",
+      "no": 2,
+      "q": "什么是 CoT？原理是什么？什么时候别用？",
+      "a": "**答：** 思维链（Chain-of-Thought）是\"让模型在给最终答案前先把推理过程写出来\"；原理是逐 token 生成，已输出的过程 token 成为后续计算的\"草稿纸\"。\n\n- 只对\"需要中间计算/推理\"的任务有效（算术、多条件判断、推导链）。\n- 简单任务（翻译、改写、摘要、事实问答）别用，写过程纯浪费 token。"
+    },
+    {
+      "id": "iv-3-35",
+      "no": 3,
+      "q": "什么是 ReAct？Thought/Action/Observation 谁生成？",
+      "a": "**答：** ReAct 是\"推理 + 行动\"交替的循环；Thought 和 Action 是模型生成的文本，Observation 是代码执行工具后喂回的。\n\n- 结构：`Thought → Action → Observation` 循环，直到 `Final Answer`。\n- 模型只负责\"想和说\"，动手的是你的代码。"
+    },
+    {
+      "id": "iv-4-36",
+      "no": 4,
+      "q": "ReAct 和 function calling 是什么关系？",
+      "a": "**答：** 思想相同、实现层级不同。ReAct 是纯文本协议（任何模型都能用，你正则抠），function calling 是厂商把工具调用做成了结构化 API 返回。\n\n- 都遵循\"模型输出意图 → 代码执行 → 结果喂回\"的循环。"
+    },
+    {
+      "id": "iv-5-37",
+      "no": 5,
+      "q": "什么是 plan-execute-reflect？为什么需要反思？",
+      "a": "**答：** 计划 → 执行 → 反思 → 改计划的三段式；反思专门修复\"第一次计划就是错的\"。\n\n- 模型第一次做的计划经常是错的（如\"第一天去长城\"，结果查到暴雨）。\n- 反思必须有明确结束条件（如返回 `DONE`），否则反思自己会死循环。"
+    },
+    {
+      "id": "iv-6-38",
+      "no": 6,
+      "q": "为什么需要结构化输出？约束手段分几档？",
+      "a": "**答：** 让模型输出 JSON，代码从\"正则抠文本\"变成\"直接读字段\"，摆脱正则地狱；约束分四档：prompt → JSON mode → JSON Schema → 函数式输出。\n\n- 约束力递增、通用性递减。\n- 无论哪一档，后面都要接健壮解析器兜底。"
+    },
+    {
+      "id": "iv-7-39",
+      "no": 7,
+      "q": "模型输出的 JSON 是\"脏\"的，怎么清洗？",
+      "a": "**答：** 一条流水线——剥壳 → 修复 → 解析 → 校验。\n\n- 剥壳：抠掉 json 代码块外壳。\n- 修复：去尾逗号、换中文引号（只在 parse 失败后才修）。\n- 校验：补默认值、查必填字段，缺省和必填分开处理。"
+    },
+    {
+      "id": "iv-8-40",
+      "no": 8,
+      "q": "JSON 的转义陷阱是什么？为什么无法自动修复？",
+      "a": "**答：** 字符串里的双引号必须写成 `\\\"`；漏转义时字符串的结束位置产生二义性，任何\"修复\"都可能是错的，所以只能报错重试。\n\n- 源头堵：prompt 提醒 + JSON mode + 永远用 `JSON.stringify` 生成。"
+    },
+    {
+      "id": "iv-1-41",
+      "no": 1,
+      "q": "什么是幻觉？为什么它无法彻底消除？",
+      "a": "**答：** 幻觉是模型在\"编词\"而非\"查事实\"；因为训练目标是\"输出像人写的文本\"，不确定时它会硬编而不是说\"不知道\"，这是它的工作方式而非 bug。\n\n- 在 Agent 里的三种危害：编工具名、编参数、编\"已完成\"。\n- 你只能假设它一定会编，用校验兜底。"
+    },
+    {
+      "id": "iv-2-42",
+      "no": 2,
+      "q": "怎么缓解幻觉？",
+      "a": "**答：** 两条路一起上——① RAG：把事实检索进上下文，让模型\"照稿念\"；② 允许说不知道：降低它编造的动机。\n\n- 黄金组合：先检索给足资料，再允许它对资料外的问题说\"不知道\"。"
+    },
+    {
+      "id": "iv-3-43",
+      "no": 3,
+      "q": "什么是提示注入？为什么防不住？",
+      "a": "**答：** 把恶意指令藏进\"看似无辜的数据\"里诱导模型越权；防不住是因为模型分不清\"指令\"和\"数据\"——系统提示和用户输入对模型来说都是\"一段文字\"。\n\n- 注入还可能来自你主动检索进去的文档。"
+    },
+    {
+      "id": "iv-4-44",
+      "no": 4,
+      "q": "提示注入的分层防御？",
+      "a": "**答：** 三层——规则过滤（拦明显注入）、数据隔离（分隔符切开指令区/数据区）、最小权限（控制损失上限）。\n\n- 规则过滤成本低、确定性高，但拦不住变体，只是第一层。\n- 最小权限最根本：给模型的工具越少，被骗的代价越小。"
+    },
+    {
+      "id": "iv-5-45",
+      "no": 5,
+      "q": "工具调用安全有哪些要点？",
+      "a": "**答：** 三点——先校验后执行、最小权限、绝不 `eval` 模型生成的代码。\n\n- 校验和执行拆开（validate/execute 分离）。\n- 给模型的能力只到\"完成任务所需的最小程度\"。\n- 模型生成的代码可能被注入污染，`eval` 一次就可能泄露密钥。"
+    },
+    {
+      "id": "iv-6-46",
+      "no": 6,
+      "q": "Agent 死循环/成本失控怎么防？几道刹车？",
+      "a": "**答：** 三道独立刹车——最大步数（管次数）、预算上限（管钱）、人工审批（管不可逆动作）。\n\n- 最大步数：`while (steps < maxIterations)` 结构性兜底。\n- 预算上限：每次工具调用累计花费，超了就停（与步数正交）。\n- 人工审批：转账、发邮件、删数据这类不可逆动作，最终决定权交回人手里。"
+    },
+    {
+      "id": "iv-7-47",
+      "no": 7,
+      "q": "敏感数据怎么处理？",
+      "a": "**答：** 顺序是\"能不外发就不外发，实在要发就脱敏，脱敏放调用模型的唯一入口处，日志同样脱敏\"。\n\n- 能交给确定性代码（如 SQL 求和）的，别把原始数据塞给模型。\n- 脱敏用正则替换成占位符（如手机号 `138****5678`）。"
+    },
+    {
+      "id": "iv-8-48",
+      "no": 8,
+      "q": "怎么测试一个概率系统（Agent）？",
+      "a": "**答：** 测结构和边界，不测措辞——用 mock LLM 固定剧本，断言\"字段/步骤/兜底\"。\n\n- 不能断言精确措辞，否则测试随机失败。\n- 该测：调了正确的工具、循环在步数上限内停止、状态能序列化恢复。"
+    },
+    {
+      "id": "iv-9-49",
+      "no": 9,
+      "q": "什么时候该上 LangChain / LangGraph？顺序是什么？",
+      "a": "**答：** 先自建懂原理，再按复杂度选框架——简单 Agent 自建，复杂状态机上 LangGraph，要现成组件局部用 LangChain。\n\n- LangChain 偏\"工作流\"（预定义链），LangGraph 偏\"真 Agent\"（有状态的图）。\n- 框架的价值是\"你已经知道该写什么后帮你少写样板\"，不是替你遮住原理。\n\n---\n\n## 第二部分：白板手写题\n\n面试官可能让你现场写代码。这些题的\"骨架\"你手写过一遍就忘不掉。"
+    }
+  ]
+}</script>
+<script>
+(function(){
+  'use strict';
+  var BANK = JSON.parse(document.getElementById('bank').textContent);
+  var KEY = 'aiagent-tutorial-progress-v1';
+
+  /* ---------- 存储 ---------- */
+  function load(){
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; }
+  }
+  function save(s){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
+  var state = load();
+  state.s1 = state.s1 || {};   // { id: true/false } 是否答对
+  state.s2 = state.s2 || {};   // { id: true } 是否已查看答案
+
+  /* ---------- 工具 ---------- */
+  function el(tag, cls, html){
+    var d = document.createElement(tag);
+    if(cls) d.className = cls;
+    if(html != null) d.innerHTML = html;
+    return d;
+  }
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+  /* 轻量 Markdown：行内 code / 加粗 */
+  function md(s){
+    return esc(s)
+      .replace(/`([^`]+)`/g, function(_,c){ return '<code>' + c + '</code>'; })
+      .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+      .replace(/\n/g, '<br>');
+  }
+  /* 代码块渲染 */
+  function codeBlock(src){
+    return '<pre><code>' + esc(src) + '</code></pre>';
+  }
+
+  /* ================= 第一关 ================= */
+  var listS1 = document.getElementById('list-s1');
+
+  function renderS1(){
+    listS1.innerHTML = '';
+    BANK.stage1.forEach(function(item){
+      var answered = Object.prototype.hasOwnProperty.call(state.s1, item.id);
+      var isRight = state.s1[item.id];
+      var wrap = el('div', 'q' + (answered ? (isRight ? ' right' : ' wrong') : ''));
+
+      var head = el('div', 'q-head');
+      head.appendChild(el('div', 'q-no', String(item.no)));
+      var qt = el('div', 'q-text');
+      qt.innerHTML = md(item.q);
+      head.appendChild(qt);
+      wrap.appendChild(head);
+
+      var opts = el('div', 'q-actions');
+      ['对','错'].forEach(function(label, i){
+        var val = i === 0;
+        var b = el('button', 'btn' + (answered ? '' : ' primary'));
+        b.textContent = label;
+        if(answered){
+          b.disabled = true;
+          if(val === item.answer) b.className = 'btn primary';
+          if(val !== item.answer && val === !item.answer && !isRight) b.className = 'btn ghost';
+        }
+        b.onclick = function(){
+          state.s1[item.id] = (val === item.answer);
+          save(state);
+          renderS1(); renderWrong(); refreshStats();
+        };
+        opts.appendChild(b);
+      });
+      if(answered){
+        var re = el('button', 'btn ghost', '重做');
+        re.onclick = function(){
+          delete state.s1[item.id];
+          save(state); renderS1(); renderWrong(); refreshStats();
+        };
+        opts.appendChild(re);
+      }
+      wrap.appendChild(opts);
+
+      if(answered){
+        var ex = el('div', 'explain ' + (isRight ? 'good' : 'bad'));
+        ex.innerHTML =
+          '<span class="verdict ' + (isRight ? 'ok' : 'no') + '">' +
+          (isRight ? '✓ 答对了' : '✗ 答错了') + '</span>' +
+          '正确答案：<b>' + (item.answer ? '对' : '错') + '</b>' +
+          (item.from ? '<span class="tag">' + esc(item.from) + '</span>' : '') +
+          '<br>' + md(item.why);
+        wrap.appendChild(ex);
+      }
+      listS1.appendChild(wrap);
+    });
+  }
+
+  /* ================= 第二关 ================= */
+  var listS2 = document.getElementById('list-s2');
+
+  function renderS2(){
+    listS2.innerHTML = '';
+    BANK.stage2.forEach(function(item){
+      var seen = !!state.s2[item.id];
+      var wrap = el('div', 'q');
+      var head = el('div', 'q-head');
+      head.appendChild(el('div', 'q-no', String(item.no)));
+      head.appendChild(el('div', 'q-text', '下面这段代码执行后打印出什么？'));
+      wrap.appendChild(head);
+
+      if(item.code) wrap.insertAdjacentHTML('beforeend', codeBlock(item.code));
+
+      var acts = el('div', 'q-actions');
+      if(!seen){
+        var b = el('button', 'btn primary', '查看答案');
+        b.onclick = function(){ state.s2[item.id] = true; save(state); renderS2(); refreshStats(); };
+        acts.appendChild(b);
+      } else {
+        var b2 = el('button', 'btn ghost', '收起');
+        b2.onclick = function(){ delete state.s2[item.id]; save(state); renderS2(); refreshStats(); };
+        acts.appendChild(b2);
+      }
+      wrap.appendChild(acts);
+
+      if(seen){
+        var ex = el('div', 'explain good');
+        ex.innerHTML = '输出：<code>' + esc(item.type) + '</code><br>' + md(item.note || '');
+        wrap.appendChild(ex);
+      }
+      listS2.appendChild(wrap);
+    });
+  }
+
+  /* ================= 错题本 ================= */
+  var listWrong = document.getElementById('list-wrong');
+
+  function renderWrong(){
+    listWrong.innerHTML = '';
+    var wrongs = BANK.stage1.filter(function(x){ return state.s1[x.id] === false; });
+    if(!wrongs.length){
+      listWrong.appendChild(el('div', 'empty', '🎉 错题本是空的。要么还没做第一关，要么你已经全对了。'));
+      return;
+    }
+    var info = el('div', 'card');
+    info.innerHTML = '<h2 style="font-size:15.5px">共 ' + wrongs.length + ' 道错题</h2>' +
+      '<p class="muted" style="margin:4px 0 0">按出处章节归类，建议回到对应章节重读后回来重做。</p>';
+    listWrong.appendChild(info);
+
+    wrongs.forEach(function(item){
+      var wrap = el('div', 'q wrong');
+      var head = el('div', 'q-head');
+      head.appendChild(el('div', 'q-no', String(item.no)));
+      var t = el('div', 'q-text');
+      t.innerHTML = md(item.q) +
+        (item.from ? '<span class="tag">回看 ' + esc(item.from) + '</span>' : '');
+      head.appendChild(t);
+      wrap.appendChild(head);
+
+      var ex = el('div', 'explain bad');
+      ex.innerHTML = '正确答案：<b>' + (item.answer ? '对' : '错') + '</b><br>' + md(item.why);
+      wrap.appendChild(ex);
+
+      var acts = el('div', 'q-actions');
+      var b = el('button', 'btn primary', '我懂了，重做这题');
+      b.onclick = function(){
+        delete state.s1[item.id];
+        save(state); renderS1(); renderWrong(); refreshStats();
+      };
+      acts.appendChild(b);
+      wrap.appendChild(acts);
+      listWrong.appendChild(wrap);
+    });
+  }
+
+  /* ================= 面试速查 ================= */
+  var listIv = document.getElementById('list-iv');
+  var ivSearch = document.getElementById('iv-search');
+
+  function renderIv(filter){
+    listIv.innerHTML = '';
+    var f = (filter || '').trim().toLowerCase();
+    var items = BANK.interview.filter(function(x){
+      if(!f) return true;
+      return (x.q + ' ' + x.a).toLowerCase().indexOf(f) >= 0;
+    });
+    document.getElementById('iv-count').textContent = items.length;
+    if(!items.length){
+      listIv.appendChild(el('div', 'empty', '没有匹配的题目，换个关键词试试。'));
+      return;
+    }
+    items.forEach(function(item, i){
+      var d = el('details', 'iv');
+      var sum = el('summary');
+      sum.appendChild(el('div', 'numchip', String(item.no || (i + 1))));
+      sum.appendChild(el('div', null, md(item.q)));
+      d.appendChild(sum);
+      var body = el('div', 'body');
+      body.innerHTML = md(item.a);
+      d.appendChild(body);
+      listIv.appendChild(d);
+    });
+  }
+  ivSearch.addEventListener('input', function(){ renderIv(ivSearch.value); });
+
+  /* ================= 统计 ================= */
+  function refreshStats(){
+    var total = BANK.stage1.length;
+    var done = 0, ok = 0;
+    BANK.stage1.forEach(function(x){
+      if(Object.prototype.hasOwnProperty.call(state.s1, x.id)){
+        done++;
+        if(state.s1[x.id]) ok++;
+      }
+    });
+    var wrong = done - ok;
+    var rate = done ? Math.round(ok / done * 100) + '%' : '—';
+
+    document.getElementById('st-done').textContent = done;
+    document.getElementById('st-total').textContent = total;
+    document.getElementById('st-ok').textContent = ok;
+    document.getElementById('st-rate').textContent = rate;
+    document.getElementById('st-wrong').textContent = wrong;
+    document.getElementById('bar').style.width = (done / total * 100) + '%';
+
+    document.getElementById('s1-done').textContent = done;
+    document.getElementById('s1-ok').textContent = ok;
+    document.getElementById('bar-s1').style.width = (done / total * 100) + '%';
+
+    var s2done = BANK.stage2.filter(function(x){ return state.s2[x.id]; }).length;
+    document.getElementById('s2-done').textContent = s2done;
+    document.getElementById('bar-s2').style.width = (s2done / BANK.stage2.length * 100) + '%';
+
+    document.getElementById('tag-s1').textContent = done ? ok + '/' + done : '';
+    document.getElementById('tag-s2').textContent = s2done ? s2done + '/25' : '';
+  }
+
+  /* ================= 标签页 ================= */
+  var tabs = document.querySelectorAll('.tab');
+  tabs.forEach(function(t){
+    t.onclick = function(){
+      tabs.forEach(function(x){ x.classList.remove('on'); });
+      document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
+      t.classList.add('on');
+      document.getElementById(t.dataset.p).classList.add('on');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+  });
+
+  /* ================= 按钮 ================= */
+  document.getElementById('s1-reset').onclick = function(){
+    if(!confirm('确定要重置第一关的全部作答吗？')) return;
+    state.s1 = {}; save(state); renderS1(); renderWrong(); refreshStats();
+  };
+  document.getElementById('s2-reset').onclick = function(){
+    if(!confirm('确定要收起第二关的全部答案吗？')) return;
+    state.s2 = {}; save(state); renderS2(); refreshStats();
+  };
+  document.getElementById('wrong-clear').onclick = function(){
+    if(!confirm('清空错题本？错题的作答记录也会一并清除。')) return;
+    Object.keys(state.s1).forEach(function(k){ if(state.s1[k] === false) delete state.s1[k]; });
+    save(state); renderS1(); renderWrong(); refreshStats();
+  };
+  document.getElementById('all-reset').onclick = function(){
+    if(!confirm('重置全部进度？此操作不可撤销。')) return;
+    state = { s1:{}, s2:{} }; save(state);
+    renderS1(); renderS2(); renderWrong(); refreshStats();
+  };
+
+  /* ================= 初始化 ================= */
+  renderS1(); renderS2(); renderWrong(); renderIv(''); refreshStats();
+})();
+</script>
+</body>
+</html>

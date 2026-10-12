@@ -1,0 +1,21 @@
+# 依赖与工具链
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+
+# 工作区内部文件
+.workbuddy/
+
+# 浏览器自动化
+.playwright-cli/
+
+# 临时/草稿文件
+.tmp*
+*.tmp
+*.log
+*.bak
+~$*
+
+# 系统文件
+.DS_Store
+Thumbs.db
